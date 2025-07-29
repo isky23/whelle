@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Spin Wheel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    .wheel-container {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      margin: 0 auto;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    #spinBtn {
+      margin-top: 20px;
+      padding: 10px 25px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .pointer {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid red;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wheel-container">
+    <div class="pointer"></div>
+    <canvas id="wheelCanvas" width="400" height="400"></canvas>
+  </div>
+  <button id="spinBtn">Putar!</button>
+
+  <script>
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const spinBtn = document.getElementById("spinBtn");
+
+    const options = ["Hadiah A", "Hadiah B", "Hadiah C", "Hadiah D", "Zonk", "Hadiah E", "Hadiah F", "Bonus"];
+    const colors = ["#FF5733", "#33FF57", "#3357FF", "#F333FF", "#FFC300", "#33FFF5", "#FF33A1", "#A1FF33"];
+    const numberOfOptions = options.length;
+    const arcSize = (2 * Math.PI) / numberOfOptions;
+
+    let angle = 0;
+    let spinning = false;
+
+    function drawWheel() {
+      for (let i = 0; i < numberOfOptions; i++) {
+        const startAngle = i * arcSize;
+        const endAngle = startAngle + arcSize;
+
+        ctx.beginPath();
+        ctx.moveTo(200, 200); // center
+        ctx.arc(200, 200, 200, startAngle, endAngle);
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+        ctx.stroke();
+
+        // Text
+        ctx.save();
+        ctx.translate(200, 200);
+        ctx.rotate(startAngle + arcSize / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "white";
+        ctx.font = "bold 16px sans-serif";
+        ctx.fillText(options[i], 180, 10);
+        ctx.restore();
+      }
+    }
+
+    function spinWheel() {
+      if (spinning) return;
+      spinning = true;
+
+      const randomDeg = Math.floor(Math.random() * 360) + 720 + 360; // 2-3 putaran lebih
+      const duration = 4000; // 4 detik
+
+      const start = performance.now();
+      function animate(time) {
+        const elapsed = time - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const easing = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+
+        angle = (randomDeg * easing) * Math.PI / 180;
+        ctx.clearRect(0, 0, 400, 400);
+        ctx.save();
+        ctx.translate(200, 200);
+        ctx.rotate(angle);
+        ctx.translate(-200, -200);
+        drawWheel();
+        ctx.restore();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          spinning = false;
+          const selected = options[Math.floor(numberOfOptions - (angle % (2 * Math.PI)) / arcSize) % numberOfOptions];
+          alert("Hasil: " + selected);
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    drawWheel();
+    spinBtn.addEventListener("click", spinWheel);
+  </script>
+
+</body>
+</html>
